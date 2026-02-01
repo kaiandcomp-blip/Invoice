@@ -1,65 +1,432 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { 
+  EstimateData, 
+  getDefaultEstimateData, 
+  calculateSubtotal, 
+  calculateTax, 
+  calculateTotal,
+  formatKRW,
+  LineItem
+} from '@/types/estimate';
 
 export default function Home() {
+  const [estimate, setEstimate] = useState<EstimateData | null>(null);
+  const [isClient, setIsClient] = useState(false);
+  const [lastExport, setLastExport] = useState<'pdf' | 'png' | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    const saved = localStorage.getItem('estimate-data');
+    if (saved) {
+      setEstimate(JSON.parse(saved));
+      return;
+    }
+    setEstimate(getDefaultEstimateData());
+  }, []);
+
+  const handleSave = () => {
+    if (!estimate) return;
+    localStorage.setItem('estimate-data', JSON.stringify(estimate));
+    alert('저장되었습니다!');
+  };
+
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const handleExportPDF = async () => {
+    if (!previewRef.current || !estimate) return;
+    setIsExporting(true);
+    setLastExport('pdf');
+    const { toPng } = await import('html-to-image');
+    const { jsPDF } = await import('jspdf');
+    const dataUrl = await toPng(previewRef.current, { quality: 0.95 });
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const imgProps = pdf.getImageProperties(dataUrl);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`estimate-${estimate.estimateNumber}.pdf`);
+    setIsExporting(false);
+  };
+
+  const handleExportImage = async () => {
+    if (!previewRef.current || !estimate) return;
+    setIsExporting(true);
+    setLastExport('png');
+    const { toPng } = await import('html-to-image');
+    const dataUrl = await toPng(previewRef.current, { quality: 0.95 });
+    const link = document.createElement('a');
+    link.download = `estimate-${estimate.estimateNumber}.png`;
+    link.href = dataUrl;
+    link.click();
+    setIsExporting(false);
+  };
+
+  const updateSender = (field: keyof EstimateData['sender'], value: string) => {
+    setEstimate(prev => {
+      if (!prev) return prev;
+      return { ...prev, sender: { ...prev.sender, [field]: value } };
+    });
+  };
+
+  const updateRecipient = (field: keyof EstimateData['recipient'], value: string) => {
+    setEstimate(prev => {
+      if (!prev) return prev;
+      return { ...prev, recipient: { ...prev.recipient, [field]: value } };
+    });
+  };
+
+  const updatePayment = (field: keyof EstimateData['paymentInfo'], value: string) => {
+    setEstimate(prev => {
+      if (!prev) return prev;
+      return { ...prev, paymentInfo: { ...prev.paymentInfo, [field]: value } };
+    });
+  };
+
+  const addItem = () => {
+    if (!estimate) return;
+    const newItem: LineItem = {
+      id: Date.now().toString(),
+      description: '',
+      quantity: 1,
+      unitPrice: 0,
+      total: 0,
+    };
+    setEstimate(prev => {
+      if (!prev) return prev;
+      return { ...prev, items: [...prev.items, newItem] };
+    });
+  };
+
+  const removeItem = (id: string) => {
+    setEstimate(prev => {
+      if (!prev) return prev;
+      return { ...prev, items: prev.items.filter(item => item.id !== id) };
+    });
+  };
+
+  const updateItem = (id: string, field: keyof LineItem, value: string | number) => {
+    setEstimate(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        items: prev.items.map(item => {
+          if (item.id !== id) return item;
+          const updated = { ...item, [field]: value };
+          if (field === 'quantity' || field === 'unitPrice') {
+            updated.total = updated.quantity * updated.unitPrice;
+          }
+          return updated;
+        }),
+      };
+    });
+  };
+
+  if (!isClient || !estimate) {
+    return <div className="min-h-screen bg-slate-100" />;
+  }
+
+  const subtotal = calculateSubtotal(estimate.items);
+  const tax = calculateTax(subtotal, estimate.taxRate);
+  const total = calculateTotal(subtotal, tax);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-slate-100 text-slate-900">
+      <div data-export-status={lastExport ?? ''} className="sr-only" />
+      <div className="flex h-screen">
+        <div className="w-[40%] bg-white border-r border-gray-200 overflow-y-auto shadow-sm">
+          <div className="p-6 space-y-6">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-xl font-bold">견적서메이커</h1>
+              <button className="px-4 py-2 text-sm bg-gray-100 rounded hover:bg-gray-200">
+                로그인
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleSave}
+                className="w-full py-3 bg-slate-800 text-white rounded-lg font-medium hover:bg-slate-700 flex items-center justify-center gap-2"
+              >
+                <span>✓</span> 저장됨
+              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleExportPDF}
+                  disabled={isExporting}
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center gap-2"
+                >
+                  <span>↓</span> PDF
+                </button>
+                <button
+                  onClick={handleExportImage}
+                  disabled={isExporting}
+                  className="flex-1 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center justify-center gap-2"
+                >
+                  <span>🖼</span> 이미지
+                </button>
+              </div>
+            </div>
+
+            <div className="text-sm text-slate-500">공급자 & 수신자</div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+                <h3 className="font-medium">공급자 (Sender)</h3>
+                <input
+                  type="text"
+                  value={estimate.sender.name}
+                  onChange={(e) => updateSender('name', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="회사명"
+                />
+                <input
+                  type="text"
+                  value={estimate.sender.address}
+                  onChange={(e) => updateSender('address', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="주소"
+                />
+                <input
+                  type="email"
+                  value={estimate.sender.email}
+                  onChange={(e) => updateSender('email', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="이메일"
+                />
+                <input
+                  type="tel"
+                  value={estimate.sender.phone}
+                  onChange={(e) => updateSender('phone', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="전화번호"
+                />
+                <input
+                  type="text"
+                  value={estimate.sender.businessNumber}
+                  onChange={(e) => updateSender('businessNumber', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="사업자번호"
+                />
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+                <h3 className="font-medium">수신자 (Recipient)</h3>
+                <input
+                  type="text"
+                  value={estimate.recipient.name}
+                  onChange={(e) => updateRecipient('name', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="회사명"
+                />
+                <input
+                  type="text"
+                  value={estimate.recipient.address}
+                  onChange={(e) => updateRecipient('address', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="주소"
+                />
+                <input
+                  type="email"
+                  value={estimate.recipient.email}
+                  onChange={(e) => updateRecipient('email', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="이메일"
+                />
+                <input
+                  type="tel"
+                  value={estimate.recipient.phone}
+                  onChange={(e) => updateRecipient('phone', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="전화번호"
+                />
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+                <h3 className="font-medium">계좌 정보 (Payment)</h3>
+                <input
+                  type="text"
+                  value={estimate.paymentInfo.bankName}
+                  onChange={(e) => updatePayment('bankName', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="은행명"
+                />
+                <input
+                  type="text"
+                  value={estimate.paymentInfo.accountNumber}
+                  onChange={(e) => updatePayment('accountNumber', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="계좌번호"
+                />
+                <input
+                  type="text"
+                  value={estimate.paymentInfo.accountHolder}
+                  onChange={(e) => updatePayment('accountHolder', e.target.value)}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="예금주"
+                />
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium">견적 항목</h3>
+                  <button
+                    onClick={addItem}
+                    className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                  >
+                    + 추가
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {estimate.items.map((item) => (
+                    <div key={item.id} className="flex gap-2 items-start">
+                      <input
+                        type="text"
+                        value={item.description}
+                        onChange={(e) => updateItem(item.id, 'description', e.target.value)}
+                        className="flex-1 px-3 py-2 border rounded text-sm"
+                        placeholder="품목명"
+                      />
+                      <input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0)}
+                        className="w-20 px-3 py-2 border rounded text-sm"
+                        placeholder="수량"
+                      />
+                      <input
+                        type="number"
+                        value={item.unitPrice}
+                        onChange={(e) => updateItem(item.id, 'unitPrice', parseInt(e.target.value) || 0)}
+                        className="w-28 px-3 py-2 border rounded text-sm"
+                        placeholder="단가"
+                      />
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="px-2 py-2 text-red-600 hover:bg-red-50 rounded"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+                <h3 className="font-medium">비고 (Notes)</h3>
+                <textarea
+                  value={estimate.notes}
+                  onChange={(e) => setEstimate(prev => (prev ? { ...prev, notes: e.target.value } : prev))}
+                  className="w-full px-3 py-2 border rounded h-20"
+                  placeholder="비고사항"
+                />
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+                <h3 className="font-medium">이용 약관 (Terms)</h3>
+                <textarea
+                  value={estimate.terms}
+                  onChange={(e) => setEstimate(prev => (prev ? { ...prev, terms: e.target.value } : prev))}
+                  className="w-full px-3 py-2 border rounded h-20"
+                  placeholder="이용 약관"
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="w-[60%] bg-slate-100 overflow-y-auto p-8">
+          <div ref={previewRef} data-preview="true" className="bg-white shadow-lg max-w-3xl mx-auto p-12 min-h-[800px] rounded-xl">
+            <div className="mb-8">
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">견적서</h1>
+                  <p className="text-gray-600">NO. {estimate.estimateNumber}</p>
+                </div>
+                <div className="text-right text-sm text-gray-600">
+                  <p>등록번호: {estimate.sender.businessNumber}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-8 mb-8">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">청구/수신 (BILL TO)</p>
+                  <p className="font-bold text-lg">{estimate.recipient.name}</p>
+                  <p className="text-sm text-gray-600">{estimate.recipient.address}</p>
+                  <p className="text-sm text-gray-600">{estimate.recipient.email}</p>
+                  <p className="text-sm text-gray-600">{estimate.recipient.phone}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">발행일 (DATE)</p>
+                  <p className="font-medium">{estimate.issueDate}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">만료일 (DUE DATE)</p>
+                  <p className="font-medium">{estimate.dueDate}</p>
+                </div>
+              </div>
+            </div>
+
+            <table className="w-full mb-8">
+              <thead>
+                <tr className="border-b-2 border-gray-800">
+                  <th className="text-left py-3 font-medium">품목</th>
+                  <th className="text-center py-3 font-medium w-20">수량</th>
+                  <th className="text-right py-3 font-medium w-32">단가</th>
+                  <th className="text-right py-3 font-medium w-32">합계</th>
+                </tr>
+              </thead>
+              <tbody>
+                {estimate.items.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-200">
+                    <td className="py-3">
+                      <p className="font-medium">{item.description}</p>
+                    </td>
+                    <td className="text-center py-3">{item.quantity}</td>
+                    <td className="text-right py-3">{formatKRW(item.unitPrice)}</td>
+                    <td className="text-right py-3">{formatKRW(item.total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="flex justify-end mb-8">
+              <div className="w-80">
+                <div className="flex justify-between py-2">
+                  <span className="text-gray-600">소계</span>
+                  <span>{formatKRW(subtotal)}</span>
+                </div>
+                <div className="flex justify-between py-2">
+                  <span className="text-gray-600">부가세 (10%)</span>
+                  <span>{formatKRW(tax)}</span>
+                </div>
+                <div className="flex justify-between py-3 border-t-2 border-gray-800 font-bold text-lg">
+                  <span className="text-blue-600">총계</span>
+                  <span className="text-blue-600">{formatKRW(total)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-gray-500 mb-2">계좌 정보 (PAYMENT INFO)</p>
+              <p className="font-medium">{estimate.paymentInfo.bankName} | {estimate.paymentInfo.accountNumber}</p>
+              <p className="text-sm text-gray-600">예금주: {estimate.paymentInfo.accountHolder}</p>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-gray-500 mb-2">비고 (NOTES)</p>
+              <p className="text-sm">{estimate.notes}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500 mb-2">이용 약관 (TERMS & CONDITIONS)</p>
+              <p className="text-sm">{estimate.terms}</p>
+            </div>
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
