@@ -71,6 +71,13 @@ export default function Home() {
     });
   };
 
+  const updateMeta = (field: 'title' | 'progress', value: string | number) => {
+    setEstimate(prev => {
+      if (!prev) return prev;
+      return { ...prev, [field]: value };
+    });
+  };
+
   const updateRecipient = (field: keyof EstimateData['recipient'], value: string) => {
     setEstimate(prev => {
       if (!prev) return prev;
@@ -143,6 +150,34 @@ export default function Home() {
               <button className="px-4 py-2 text-sm bg-gray-100 rounded hover:bg-gray-200">
                 로그인
               </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>진행률</span>
+                <span>{estimate.progress}%</span>
+              </div>
+              <div className="h-2 w-full bg-slate-200 rounded-full">
+                <div
+                  className="h-2 bg-slate-600 rounded-full"
+                  style={{ width: `${estimate.progress}%` }}
+                />
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={estimate.progress}
+                onChange={(e) => updateMeta('progress', Number(e.target.value))}
+                className="w-full"
+              />
+              <input
+                type="text"
+                value={estimate.title}
+                onChange={(e) => updateMeta('title', e.target.value)}
+                className="w-full px-3 py-2 border rounded"
+                placeholder="견적서 제목"
+              />
             </div>
 
             <div className="space-y-3">
@@ -311,6 +346,18 @@ export default function Home() {
                       </button>
                     </div>
                   ))}
+                </div>
+                <div className="mt-3">
+                  <label className="text-xs text-slate-500">부가세율(%)</label>
+                  <input
+                    type="number"
+                    value={Math.round(estimate.taxRate * 100)}
+                    onChange={(e) => {
+                      const rate = Number(e.target.value);
+                      setEstimate(prev => (prev ? { ...prev, taxRate: rate / 100 } : prev));
+                    }}
+                    className="mt-1 w-24 px-3 py-2 border rounded text-sm"
+                  />
                 </div>
               </div>
 

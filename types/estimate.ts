@@ -28,9 +28,11 @@ export interface LineItem {
 }
 
 export interface EstimateData {
+  title: string;
   estimateNumber: string;
   issueDate: string;
   dueDate: string;
+  progress: number;
   sender: Sender;
   recipient: Recipient;
   paymentInfo: PaymentInfo;
@@ -63,9 +65,11 @@ export const generateEstimateNumber = (): string => {
 };
 
 export const getDefaultEstimateData = (): EstimateData => ({
+  title: '[스타트업 주식회사] 웹사이트 UI/UX 디자인, 견적',
   estimateNumber: generateEstimateNumber(),
   issueDate: new Date().toISOString().split('T')[0],
   dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  progress: 80,
   sender: {
     name: '견적서메이커',
     address: '서울특별시 강남구 테헤란로 123',
