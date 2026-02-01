@@ -29,10 +29,12 @@ export interface LineItem {
 
 export interface EstimateData {
   title: string;
+  fileName: string;
+  fontFamily: string;
+  logoDataUrl: string | null;
   estimateNumber: string;
   issueDate: string;
   dueDate: string;
-  progress: number;
   sender: Sender;
   recipient: Recipient;
   paymentInfo: PaymentInfo;
@@ -64,35 +66,40 @@ export const generateEstimateNumber = (): string => {
   return `INV-${year}-${random}`;
 };
 
-export const getDefaultEstimateData = (): EstimateData => ({
-  title: '[스타트업 주식회사] 웹사이트 UI/UX 디자인, 견적',
-  estimateNumber: generateEstimateNumber(),
-  issueDate: new Date().toISOString().split('T')[0],
-  dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-  progress: 80,
-  sender: {
-    name: '견적서메이커',
-    address: '서울특별시 강남구 테헤란로 123',
-    email: 'contact@quote-maker.cx',
-    phone: '02-1234-5678',
-    businessNumber: '123-45-67890',
-  },
-  recipient: {
-    name: '스타트업 주식회사',
-    address: '서울특별시 중구, 110022',
-    email: 'ceo@startup-kr.com',
-    phone: '010-9876-5432',
-  },
-  paymentInfo: {
-    bankName: '00은행',
-    accountNumber: '1234-56-7890',
-    accountHolder: '홍길동',
-  },
-  items: [
-    {
-      id: '1',
-      description: '웹사이트 UI/UX 디자인',
-      quantity: 1,
+export const getDefaultEstimateData = (): EstimateData => {
+  const estimateNumber = generateEstimateNumber();
+
+  return {
+    title: '[스타트업 주식회사] 웹사이트 UI/UX 디자인, 견적',
+    fileName: `estimate-${estimateNumber}`,
+    fontFamily: 'system',
+    logoDataUrl: null,
+    estimateNumber,
+    issueDate: new Date().toISOString().split('T')[0],
+    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    sender: {
+      name: '견적서메이커',
+      address: '서울특별시 강남구 테헤란로 123',
+      email: 'contact@quote-maker.cx',
+      phone: '02-1234-5678',
+      businessNumber: '123-45-67890',
+    },
+    recipient: {
+      name: '스타트업 주식회사',
+      address: '서울특별시 중구, 110022',
+      email: 'ceo@startup-kr.com',
+      phone: '010-9876-5432',
+    },
+    paymentInfo: {
+      bankName: '00은행',
+      accountNumber: '1234-56-7890',
+      accountHolder: '홍길동',
+    },
+    items: [
+      {
+        id: '1',
+        description: '웹사이트 UI/UX 디자인',
+        quantity: 1,
       unitPrice: 1500000,
       total: 1500000,
     },
@@ -109,9 +116,10 @@ export const getDefaultEstimateData = (): EstimateData => ({
       quantity: 1,
       unitPrice: 1000000,
       total: 1000000,
-    },
-  ],
-  notes: '본 견적서는 2주간 유효합니다.',
-  terms: '착수금 50%, 잔금 50% (완료 후 7일 이내 지급)',
-  taxRate: 0.1,
-});
+      },
+    ],
+    notes: '본 견적서는 2주간 유효합니다.',
+    terms: '착수금 50%, 잔금 50% (완료 후 7일 이내 지급)',
+    taxRate: 0.1,
+  };
+};

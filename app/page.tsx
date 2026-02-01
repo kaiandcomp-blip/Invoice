@@ -1,15 +1,22 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { 
-  EstimateData, 
-  getDefaultEstimateData, 
-  calculateSubtotal, 
-  calculateTax, 
+import {
+  EstimateData,
+  getDefaultEstimateData,
+  calculateSubtotal,
+  calculateTax,
   calculateTotal,
   formatKRW,
   LineItem
 } from '@/types/estimate';
+
+const fontOptions = [
+  { value: 'system', label: '기본 (Sans)', stack: 'system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif' },
+  { value: 'serif', label: 'Serif', stack: '"Times New Roman", Georgia, serif' },
+  { value: 'mono', label: 'Mono', stack: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' },
+  { value: 'rounded', label: 'Rounded', stack: '"Trebuchet MS", "Arial Rounded MT Bold", "Noto Sans KR", sans-serif' },
+];
 
 export default function Home() {
   const [estimate, setEstimate] = useState<EstimateData | null>(null);
@@ -47,7 +54,8 @@ export default function Home() {
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
     pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`estimate-${estimate.estimateNumber}.pdf`);
+    const fileName = estimate.fileName.trim() || `estimate-${estimate.estimateNumber}`;
+    pdf.save(`${fileName}.pdf`);
     setIsExporting(false);
   };
 
@@ -58,7 +66,8 @@ export default function Home() {
     const { toPng } = await import('html-to-image');
     const dataUrl = await toPng(previewRef.current, { quality: 0.95 });
     const link = document.createElement('a');
-    link.download = `estimate-${estimate.estimateNumber}.png`;
+    const fileName = estimate.fileName.trim() || `estimate-${estimate.estimateNumber}`;
+    link.download = `${fileName}.png`;
     link.href = dataUrl;
     link.click();
     setIsExporting(false);
@@ -71,11 +80,20 @@ export default function Home() {
     });
   };
 
-  const updateMeta = (field: 'title' | 'progress', value: string | number) => {
+  const updateMeta = (field: 'title' | 'fileName' | 'fontFamily', value: string | number) => {
     setEstimate(prev => {
       if (!prev) return prev;
       return { ...prev, [field]: value };
     });
+  };
+
+  const handleLogoUpload = (file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setEstimate(prev => (prev ? { ...prev, logoDataUrl: reader.result as string } : prev));
+    };
+    reader.readAsDataURL(file);
   };
 
   const updateRecipient = (field: keyof EstimateData['recipient'], value: string) => {
@@ -153,24 +171,6 @@ export default function Home() {
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between text-xs text-slate-500">
-                <span>진행률</span>
-                <span>{estimate.progress}%</span>
-              </div>
-              <div className="h-2 w-full bg-slate-200 rounded-full">
-                <div
-                  className="h-2 bg-slate-600 rounded-full"
-                  style={{ width: `${estimate.progress}%` }}
-                />
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={estimate.progress}
-                onChange={(e) => updateMeta('progress', Number(e.target.value))}
-                className="w-full"
-              />
               <input
                 type="text"
                 value={estimate.title}
@@ -178,6 +178,50 @@ export default function Home() {
                 className="w-full px-3 py-2 border rounded"
                 placeholder="견적서 제목"
               />
+              <input
+                type="text"
+                value={estimate.fileName}
+                onChange={(e) => updateMeta('fileName', e.target.value)}
+                className="w-full px-3 py-2 border rounded"
+                placeholder="저장 파일명"
+              />
+              <div>
+                <label className="text-xs text-slate-500">폰트</label>
+                <select
+                  value={estimate.fontFamily}
+                  onChange={(e) => updateMeta('fontFamily', e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border rounded"
+                >
+                  {fontOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-slate-500">로고 설정</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleLogoUpload(e.target.files?.[0] ?? null)}
+                  className="w-full text-sm"
+                />
+                {estimate.logoDataUrl && (
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={estimate.logoDataUrl}
+                      alt="로고 미리보기"
+                      className="h-10 w-10 object-contain border rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setEstimate(prev => (prev ? { ...prev, logoDataUrl: null } : prev))}
+                      className="text-xs text-slate-500 underline"
+                    >
+                      제거
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-3">
@@ -385,10 +429,22 @@ export default function Home() {
         </div>
 
         <div className="w-[60%] bg-slate-100 overflow-y-auto p-8">
-          <div ref={previewRef} data-preview="true" className="bg-white shadow-lg max-w-3xl mx-auto p-12 min-h-[800px] rounded-xl">
+          <div
+            ref={previewRef}
+            data-preview="true"
+            className="bg-white shadow-lg max-w-3xl mx-auto p-12 min-h-[800px] rounded-xl"
+            style={{ fontFamily: fontOptions.find(option => option.value === estimate.fontFamily)?.stack }}
+          >
             <div className="mb-8">
               <div className="flex justify-between items-start mb-8">
                 <div>
+                  {estimate.logoDataUrl && (
+                    <img
+                      src={estimate.logoDataUrl}
+                      alt="로고"
+                      className="h-10 mb-3 object-contain"
+                    />
+                  )}
                   <h1 className="text-3xl font-bold mb-2">견적서</h1>
                   <p className="text-gray-600">NO. {estimate.estimateNumber}</p>
                 </div>
