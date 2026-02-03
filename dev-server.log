@@ -1,0 +1,70 @@
+
+> estimate-app@0.1.0 dev
+> next dev
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/jasonmac/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/jasonmac/Downloads/vsCode/kaiandcomp-blip-Invoice/package-lock.json
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.30.1.62:3000
+
+✓ Starting...
+✓ Ready in 467ms
+Error: Route "/cover" used `searchParams.client`. `searchParams` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at Cover (app/cover/page.tsx:4:18)
+  2 |
+  3 | export default function Cover({ searchParams }: { searchParams?: Record<string, string> }) {
+> 4 |   const client = searchParams?.client || '고객명';
+    |                  ^
+  5 |   const estimateNo = searchParams?.estimate || 'EST-0001';
+  6 |   const date = searchParams?.date || new Date().toLocaleDateString('ko-KR');
+  7 |   const preparedBy = searchParams?.by || '담당자명';
+ GET /cover 200 in 832ms (compile: 707ms, render: 125ms)
+Error: Route "/cover" used `searchParams.client`. `searchParams` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at Cover (app/cover/page.tsx:4:18)
+  2 |
+  3 | export default function Cover({ searchParams }: { searchParams?: Record<string, string> }) {
+> 4 |   const client = searchParams?.client || '고객명';
+    |                  ^
+  5 |   const estimateNo = searchParams?.estimate || 'EST-0001';
+  6 |   const date = searchParams?.date || new Date().toLocaleDateString('ko-KR');
+  7 |   const preparedBy = searchParams?.by || '담당자명';
+ HEAD /cover 200 in 32ms (compile: 3ms, render: 29ms)
+Error: Route "/cover" used `searchParams.client`. `searchParams` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at Cover (app/cover/page.tsx:4:18)
+  2 |
+  3 | export default function Cover({ searchParams }: { searchParams?: Record<string, string> }) {
+> 4 |   const client = searchParams?.client || '고객명';
+    |                  ^
+  5 |   const estimateNo = searchParams?.estimate || 'EST-0001';
+  6 |   const date = searchParams?.date || new Date().toLocaleDateString('ko-KR');
+  7 |   const preparedBy = searchParams?.by || '담당자명';
+ GET /cover 200 in 58ms (compile: 13ms, render: 46ms)
+Error: Route "/cover" used `searchParams.client`. `searchParams` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at Cover (app/cover/page.tsx:4:18)
+  2 |
+  3 | export default function Cover({ searchParams }: { searchParams?: Record<string, string> }) {
+> 4 |   const client = searchParams?.client || '고객명';
+    |                  ^
+  5 |   const estimateNo = searchParams?.estimate || 'EST-0001';
+  6 |   const date = searchParams?.date || new Date().toLocaleDateString('ko-KR');
+  7 |   const preparedBy = searchParams?.by || '담당자명';
+ GET /cover 200 in 34ms (compile: 3ms, render: 31ms)
+ GET / 200 in 69ms (compile: 28ms, render: 41ms)
+✓ Compiled in 23ms
+✓ Compiled in 21ms
+Error: Route "/cover" used `searchParams.client`. `searchParams` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at Cover (app/cover/page.tsx:4:18)
+  2 |
+  3 | export default function Cover({ searchParams }: { searchParams?: Record<string, string> }) {
+> 4 |   const client = searchParams?.client || '고객명';
+    |                  ^
+  5 |   const estimateNo = searchParams?.estimate || 'EST-0001';
+  6 |   const date = searchParams?.date || new Date().toLocaleDateString('ko-KR');
+  7 |   const preparedBy = searchParams?.by || '담당자명';
+ HEAD /cover 200 in 23ms (compile: 3ms, render: 20ms)

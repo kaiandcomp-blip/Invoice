@@ -54,7 +54,7 @@ export default function Home() {
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
     pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    const fileName = estimate.fileName.trim() || `estimate-${estimate.estimateNumber}`;
+    const fileName = (estimate.fileName ?? '').trim() || `estimate-${estimate.estimateNumber}`;
     pdf.save(`${fileName}.pdf`);
     setIsExporting(false);
   };
@@ -66,7 +66,7 @@ export default function Home() {
     const { toPng } = await import('html-to-image');
     const dataUrl = await toPng(previewRef.current, { quality: 0.95 });
     const link = document.createElement('a');
-    const fileName = estimate.fileName.trim() || `estimate-${estimate.estimateNumber}`;
+    const fileName = (estimate.fileName ?? '').trim() || `estimate-${estimate.estimateNumber}`;
     link.download = `${fileName}.png`;
     link.href = dataUrl;
     link.click();
@@ -173,14 +173,14 @@ export default function Home() {
             <div className="space-y-4">
               <input
                 type="text"
-                value={estimate.title}
+                value={estimate.title ?? ''}
                 onChange={(e) => updateMeta('title', e.target.value)}
                 className="w-full px-3 py-2 border rounded"
                 placeholder="견적서 제목"
               />
               <input
                 type="text"
-                value={estimate.fileName}
+                value={estimate.fileName ?? ''}
                 onChange={(e) => updateMeta('fileName', e.target.value)}
                 className="w-full px-3 py-2 border rounded"
                 placeholder="저장 파일명"
@@ -188,7 +188,7 @@ export default function Home() {
               <div>
                 <label className="text-xs text-slate-500">폰트</label>
                 <select
-                  value={estimate.fontFamily}
+                  value={estimate.fontFamily ?? 'system'}
                   onChange={(e) => updateMeta('fontFamily', e.target.value)}
                   className="mt-1 w-full px-3 py-2 border rounded"
                 >
@@ -256,35 +256,35 @@ export default function Home() {
                 <h3 className="font-medium">공급자 (Sender)</h3>
                 <input
                   type="text"
-                  value={estimate.sender.name}
+                  value={estimate.sender.name ?? ''}
                   onChange={(e) => updateSender('name', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                   placeholder="회사명"
                 />
                 <input
                   type="text"
-                  value={estimate.sender.address}
+                  value={estimate.sender.address ?? ''}
                   onChange={(e) => updateSender('address', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                   placeholder="주소"
                 />
                 <input
                   type="email"
-                  value={estimate.sender.email}
+                  value={estimate.sender.email ?? ''}
                   onChange={(e) => updateSender('email', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                   placeholder="이메일"
                 />
                 <input
                   type="tel"
-                  value={estimate.sender.phone}
+                  value={estimate.sender.phone ?? ''}
                   onChange={(e) => updateSender('phone', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                   placeholder="전화번호"
                 />
                 <input
                   type="text"
-                  value={estimate.sender.businessNumber}
+                  value={estimate.sender.businessNumber ?? ''}
                   onChange={(e) => updateSender('businessNumber', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                   placeholder="사업자번호"
@@ -295,28 +295,28 @@ export default function Home() {
                 <h3 className="font-medium">수신자 (Recipient)</h3>
                 <input
                   type="text"
-                  value={estimate.recipient.name}
+                  value={estimate.recipient.name ?? ''}
                   onChange={(e) => updateRecipient('name', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                   placeholder="회사명"
                 />
                 <input
                   type="text"
-                  value={estimate.recipient.address}
+                  value={estimate.recipient.address ?? ''}
                   onChange={(e) => updateRecipient('address', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                   placeholder="주소"
                 />
                 <input
                   type="email"
-                  value={estimate.recipient.email}
+                  value={estimate.recipient.email ?? ''}
                   onChange={(e) => updateRecipient('email', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                   placeholder="이메일"
                 />
                 <input
                   type="tel"
-                  value={estimate.recipient.phone}
+                  value={estimate.recipient.phone ?? ''}
                   onChange={(e) => updateRecipient('phone', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                   placeholder="전화번호"
@@ -327,21 +327,21 @@ export default function Home() {
                 <h3 className="font-medium">계좌 정보 (Payment)</h3>
                 <input
                   type="text"
-                  value={estimate.paymentInfo.bankName}
+                  value={estimate.paymentInfo.bankName ?? ''}
                   onChange={(e) => updatePayment('bankName', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                   placeholder="은행명"
                 />
                 <input
                   type="text"
-                  value={estimate.paymentInfo.accountNumber}
+                  value={estimate.paymentInfo.accountNumber ?? ''}
                   onChange={(e) => updatePayment('accountNumber', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                   placeholder="계좌번호"
                 />
                 <input
                   type="text"
-                  value={estimate.paymentInfo.accountHolder}
+                  value={estimate.paymentInfo.accountHolder ?? ''}
                   onChange={(e) => updatePayment('accountHolder', e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                   placeholder="예금주"
@@ -363,21 +363,21 @@ export default function Home() {
                     <div key={item.id} className="flex gap-2 items-start">
                       <input
                         type="text"
-                        value={item.description}
+                        value={item.description ?? ''}
                         onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                         className="flex-1 px-3 py-2 border rounded text-sm"
                         placeholder="품목명"
                       />
                       <input
                         type="number"
-                        value={item.quantity}
+                        value={item.quantity ?? 0}
                         onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0)}
                         className="w-20 px-3 py-2 border rounded text-sm"
                         placeholder="수량"
                       />
                       <input
                         type="number"
-                        value={item.unitPrice}
+                        value={item.unitPrice ?? 0}
                         onChange={(e) => updateItem(item.id, 'unitPrice', parseInt(e.target.value) || 0)}
                         className="w-28 px-3 py-2 border rounded text-sm"
                         placeholder="단가"
@@ -394,21 +394,21 @@ export default function Home() {
                 <div className="mt-3">
                   <label className="text-xs text-slate-500">부가세율(%)</label>
                   <input
-                    type="number"
-                    value={Math.round(estimate.taxRate * 100)}
-                    onChange={(e) => {
-                      const rate = Number(e.target.value);
-                      setEstimate(prev => (prev ? { ...prev, taxRate: rate / 100 } : prev));
-                    }}
-                    className="mt-1 w-24 px-3 py-2 border rounded text-sm"
-                  />
+                      type="number"
+                      value={Math.round((estimate.taxRate ?? 0) * 100)}
+                      onChange={(e) => {
+                        const rate = Number(e.target.value);
+                        setEstimate(prev => (prev ? { ...prev, taxRate: rate / 100 } : prev));
+                      }}
+                      className="mt-1 w-24 px-3 py-2 border rounded text-sm"
+                    />
                 </div>
               </div>
 
               <div className="p-4 bg-gray-50 rounded-lg space-y-3">
                 <h3 className="font-medium">비고 (Notes)</h3>
                 <textarea
-                  value={estimate.notes}
+                  value={estimate.notes ?? ''}
                   onChange={(e) => setEstimate(prev => (prev ? { ...prev, notes: e.target.value } : prev))}
                   className="w-full px-3 py-2 border rounded h-20"
                   placeholder="비고사항"
@@ -418,7 +418,7 @@ export default function Home() {
               <div className="p-4 bg-gray-50 rounded-lg space-y-3">
                 <h3 className="font-medium">이용 약관 (Terms)</h3>
                 <textarea
-                  value={estimate.terms}
+                  value={estimate.terms ?? ''}
                   onChange={(e) => setEstimate(prev => (prev ? { ...prev, terms: e.target.value } : prev))}
                   className="w-full px-3 py-2 border rounded h-20"
                   placeholder="이용 약관"
