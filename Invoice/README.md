@@ -1,0 +1,3 @@
+# Invoice
+
+Initial project scaffold.
