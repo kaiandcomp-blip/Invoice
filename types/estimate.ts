@@ -42,6 +42,9 @@ export interface EstimateData {
   notes: string;
   terms: string;
   taxRate: number;
+  discountRate: number; // Global discount percentage (0-100)
+  savePath: string;
+  designTemplate: 'design1' | 'design2' | 'design3' | 'design4';
 }
 
 export const calculateSubtotal = (items: LineItem[]): number => {
@@ -60,32 +63,39 @@ export const formatKRW = (amount: number): string => {
   return '₩' + amount.toLocaleString('ko-KR');
 };
 
-export const generateEstimateNumber = (): string => {
+export const generateEstimateNumber = (sequence: number = 1): string => {
   const year = new Date().getFullYear();
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `INV-${year}-${random}`;
+  const seqStr = sequence.toString().padStart(3, '0');
+  return `INV-${year}-${seqStr}`;
+};
+
+export const generateDefaultFileName = (title: string, date: string, sequence: number = 1): string => {
+  const safeTitle = (title || '견적서').replace(/[\\/:*?"<>|]/g, '_').substring(0, 20);
+  const safeDate = date || new Date().toLocaleDateString('en-CA');
+  const seqStr = sequence.toString().padStart(3, '0');
+  return `${safeTitle}_${safeDate}_${seqStr}`;
 };
 
 export const getDefaultEstimateData = (): EstimateData => {
   const estimateNumber = generateEstimateNumber();
 
   return {
-    title: '[스타트업 주식회사] 웹사이트 UI/UX 디자인, 견적',
-    fileName: `estimate-${estimateNumber}`,
+    title: '[카이앤컴퍼니] 마케팅 견적서',
+    fileName: '', // Will be computed if empty
     fontFamily: 'system',
     logoDataUrl: null,
     estimateNumber,
-    issueDate: new Date().toISOString().split('T')[0],
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    issueDate: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD in local time
+    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA'),
     sender: {
-      name: '견적서메이커',
+      name: '카이앤컴퍼니',
       address: '서울특별시 강남구 테헤란로 123',
       email: 'contact@quote-maker.cx',
       phone: '02-1234-5678',
       businessNumber: '123-45-67890',
     },
     recipient: {
-      name: '스타트업 주식회사',
+      name: '스타트업(주)',
       address: '서울특별시 중구, 110022',
       email: 'ceo@startup-kr.com',
       phone: '010-9876-5432',
@@ -100,26 +110,29 @@ export const getDefaultEstimateData = (): EstimateData => {
         id: '1',
         description: '웹사이트 UI/UX 디자인',
         quantity: 1,
-      unitPrice: 1500000,
-      total: 1500000,
-    },
-    {
-      id: '2',
-      description: '프론트엔드 개발 (React)',
-      quantity: 1,
-      unitPrice: 2000000,
-      total: 2000000,
-    },
-    {
-      id: '3',
-      description: '백엔드 API 연동',
-      quantity: 1,
-      unitPrice: 1000000,
-      total: 1000000,
+        unitPrice: 1500000,
+        total: 1500000,
+      },
+      {
+        id: '2',
+        description: '프론트엔드 개발 (React)',
+        quantity: 1,
+        unitPrice: 2000000,
+        total: 2000000,
+      },
+      {
+        id: '3',
+        description: '백엔드 API 연동',
+        quantity: 1,
+        unitPrice: 1000000,
+        total: 1000000,
       },
     ],
     notes: '본 견적서는 2주간 유효합니다.',
     terms: '착수금 50%, 잔금 50% (완료 후 7일 이내 지급)',
     taxRate: 0.1,
+    discountRate: 0,
+    savePath: '',
+    designTemplate: 'design1',
   };
 };
