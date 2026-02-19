@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>광고 캠페인 성과 분석 보고서</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border-radius: 16px;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 30px;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .meta {
+            color: #7f8c8d;
+            font-size: 1em;
+        }
+
+        .meta span {
+            margin: 0 15px;
+        }
+
+        /* Summary Section */
+        .summary {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            border-left: 5px solid #667eea;
+        }
+
+        .summary h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .summary p {
+            color: #555;
+            font-size: 1.05em;
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .kpi-card {
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .kpi-card.purple {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .kpi-card.green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .kpi-card.orange {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .kpi-card.blue {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .kpi-card.yellow {
+            background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+            color: white;
+        }
+
+        .kpi-value {
+            font-size: 2.8em;
+            font-weight: bold;
+            margin: 10px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .kpi-label {
+            font-size: 0.95em;
+            opacity: 0.95;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Section Styles */
+        section {
+            margin: 50px 0;
+        }
+
+        h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #ecf0f1;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        /* Table Styles */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+        }
+
+        th {
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status Badges */
+        .status {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.completed {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* Insight Box */
+        .insight-box {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            border-left: 5px solid #ffc107;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+
+        .insight-box h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .insight-box ul {
+            margin-left: 20px;
+            color: #6c5700;
+        }
+
+        .insight-box li {
+            margin: 10px 0;
+        }
+
+        /* Recommendation Box */
+        .recommendation-box {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            border-left: 5px solid #17a2b8;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+
+        .recommendation-box h3 {
+            color: #0c5460;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .recommendation-box ul {
+            margin-left: 20px;
+            color: #0c5460;
+        }
+
+        .recommendation-box li {
+            margin: 10px 0;
+        }
+
+        /* Campaign Cards */
+        .campaign-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .campaign-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-top: 4px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+
+        .campaign-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .campaign-card h4 {
+            color: #2c3e50;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+
+        .campaign-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
+        /* Chart Section */
+        .chart-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+        }
+
+        .bar-chart {
+            margin: 20px 0;
+        }
+
+        .bar-item {
+            margin: 15px 0;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .bar-track {
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 12px;
+            transition: width 1s ease;
+        }
+
+        .bar-fill.purple {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .bar-fill.green {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+        }
+
+        .bar-fill.blue {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px solid #ecf0f1;
+            color: #7f8c8d;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+
+            .kpi-card, .campaign-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .kpi-value {
+                font-size: 2em;
+            }
+
+            .campaign-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>광고 캠페인 성과 분석 보고서</h1>
+            <div class="meta">
+                <span>분석 기간: 2026-02-09 ~ 2026-02-19</span>
+                <span>|</span>
+                <span>생성일: 2026-02-19</span>
+                <span>|</span>
+                <span>플랫폼: Meta (Facebook/Instagram)</span>
+            </div>
+        </header>
+
+        <div class="summary">
+            <h2>Executive Summary</h2>
+            <p>
+                총 5개 캠페인 중 2개가 활성 상태이며, 전체 광고 지출 <strong>$553.33</strong>에서
+                <strong>16건의 구매 전환</strong>을 달성했습니다. 평균 ROAS는 <strong>10.66</strong>으로
+                우수한 수익성을 보여주고 있습니다. 특히 '세리_오디언스타겟' 캠페인이 ROAS 11.46으로
+                가장 높은 효율을 기록했습니다.
+            </p>
+        </div>
+
+        <!-- KPI Dashboard -->
+        <section>
+            <h2>핵심 성과 지표 (KPI)</h2>
+            <div class="kpi-grid">
+                <div class="kpi-card purple">
+                    <div class="kpi-label">총 광고 지출</div>
+                    <div class="kpi-value">$553.33</div>
+                    <div class="kpi-label">USD</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-label">총 구매 전환</div>
+                    <div class="kpi-value">16</div>
+                    <div class="kpi-label">건</div>
+                </div>
+                <div class="kpi-card blue">
+                    <div class="kpi-label">평균 ROAS</div>
+                    <div class="kpi-value">10.66</div>
+                    <div class="kpi-label">광고비 대비 수익률</div>
+                </div>
+                <div class="kpi-card orange">
+                    <div class="kpi-label">총 노출수</div>
+                    <div class="kpi-value">35,962</div>
+                    <div class="kpi-label">회</div>
+                </div>
+                <div class="kpi-card yellow">
+                    <div class="kpi-label">총 링크 클릭</div>
+                    <div class="kpi-value">2,865</div>
+                    <div class="kpi-label">회</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Campaign Performance Table -->
+        <section>
+            <h2>캠페인별 상세 성과</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>캠페인명</th>
+                            <th>상태</th>
+                            <th>일일 예산</th>
+                            <th>지출액</th>
+                            <th>노출수</th>
+                            <th>클릭수</th>
+                            <th>CTR</th>
+                            <th>CPC</th>
+                            <th>구매</th>
+                            <th>ROAS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>251002_스프_오디언스타겟</strong></td>
+                            <td><span class="status active">Active</span></td>
+                            <td>$30</td>
+                            <td>$318.06</td>
+                            <td>23,305</td>
+                            <td>1,871</td>
+                            <td>5.90%</td>
+                            <td>$0.15</td>
+                            <td>10</td>
+                            <td><strong>9.86</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>251126_세리_오디언스타겟</strong></td>
+                            <td><span class="status active">Active</span></td>
+                            <td>$20</td>
+                            <td>$211.37</td>
+                            <td>10,206</td>
+                            <td>805</td>
+                            <td>5.33%</td>
+                            <td>$0.24</td>
+                            <td>6</td>
+                            <td><strong>11.46</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>게시글_트래픽_260209</strong></td>
+                            <td><span class="status completed">Completed</span></td>
+                            <td>$8</td>
+                            <td>$23.90</td>
+                            <td>2,451</td>
+                            <td>189</td>
+                            <td>5.40%</td>
+                            <td>$0.13</td>
+                            <td>0</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><strong>251002_오디언스타겟_트래픽</strong></td>
+                            <td><span class="status inactive">Inactive</span></td>
+                            <td>$5</td>
+                            <td>$0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>0</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><strong>251208_레드_오디언스타겟</strong></td>
+                            <td><span class="status inactive">Inactive</span></td>
+                            <td>$5</td>
+                            <td>$0</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>0</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Campaign Cards -->
+        <section>
+            <h2>활성 캠페인 상세 분석</h2>
+            <div class="campaign-grid">
+                <div class="campaign-card">
+                    <h4>251002_스프_오디언스타겟</h4>
+                    <span class="status active">Active</span>
+                    <div class="campaign-stats" style="margin-top: 20px;">
+                        <div class="stat-item">
+                            <div class="stat-value">$318.06</div>
+                            <div class="stat-label">지출액</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">9.86</div>
+                            <div class="stat-label">ROAS</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">10</div>
+                            <div class="stat-label">구매 전환</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">$31.81</div>
+                            <div class="stat-label">구매당 비용</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">5.90%</div>
+                            <div class="stat-label">CTR</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">$3,134.57</div>
+                            <div class="stat-label">전환 매출</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="campaign-card">
+                    <h4>251126_세리_오디언스타겟</h4>
+                    <span class="status active">Active</span>
+                    <div class="campaign-stats" style="margin-top: 20px;">
+                        <div class="stat-item">
+                            <div class="stat-value">$211.37</div>
+                            <div class="stat-label">지출액</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">11.46</div>
+                            <div class="stat-label">ROAS</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">6</div>
+                            <div class="stat-label">구매 전환</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">$35.23</div>
+                            <div class="stat-label">구매당 비용</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">5.33%</div>
+                            <div class="stat-label">CTR</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">$2,421.89</div>
+                            <div class="stat-label">전환 매출</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Visual Charts -->
+        <section>
+            <h2>성과 비교 차트</h2>
+            <div class="chart-section">
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">캠페인별 지출 비율</h3>
+                <div class="bar-chart">
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span>스프_오디언스타겟</span>
+                            <span>$318.06 (57.5%)</span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill purple" style="width: 57.5%;"></div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span>세리_오디언스타겟</span>
+                            <span>$211.37 (38.2%)</span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill green" style="width: 38.2%;"></div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span>게시글_트래픽</span>
+                            <span>$23.90 (4.3%)</span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill blue" style="width: 4.3%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">캠페인별 ROAS 비교</h3>
+                <div class="bar-chart">
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span>세리_오디언스타겟</span>
+                            <span>ROAS 11.46</span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill green" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="bar-item">
+                        <div class="bar-label">
+                            <span>스프_오디언스타겟</span>
+                            <span>ROAS 9.86</span>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill purple" style="width: 86%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Insights -->
+        <section>
+            <h2>인사이트 분석</h2>
+            <div class="insight-box">
+                <h3>주요 발견사항</h3>
+                <ul>
+                    <li><strong>세리_오디언스타겟</strong>이 ROAS 11.46으로 가장 높은 수익성을 보임 - 예산 증액 검토 필요</li>
+                    <li>두 활성 캠페인 모두 <strong>CTR 5% 이상</strong>으로 업계 평균(1-2%) 대비 우수한 성과</li>
+                    <li><strong>게시글_트래픽 캠페인</strong>은 클릭은 발생했으나 전환 없음 - 랜딩페이지 최적화 필요</li>
+                    <li>비활성 캠페인 2개는 지출 없음 - 재활성화 또는 삭제 검토</li>
+                    <li>평균 CPC $0.17로 효율적인 트래픽 확보 중</li>
+                </ul>
+            </div>
+
+            <div class="recommendation-box">
+                <h3>최적화 제안</h3>
+                <ul>
+                    <li><strong>예산 재배분:</strong> 세리_오디언스타겟 캠페인의 일일 예산을 $30으로 증액하여 ROAS 극대화</li>
+                    <li><strong>A/B 테스트:</strong> 스프_오디언스타겟의 크리에이티브를 세리 캠페인 스타일로 테스트</li>
+                    <li><strong>비활성 캠페인 정리:</strong> 2개의 비활성 캠페인 분석 후 재활성화 또는 아카이브</li>
+                    <li><strong>트래픽 캠페인 개선:</strong> 게시글_트래픽 캠페인의 타겟팅 및 랜딩페이지 최적화로 전환율 개선</li>
+                    <li><strong>리타겟팅 강화:</strong> 높은 CTR 기반으로 웹사이트 방문자 리타겟팅 캠페인 추가 고려</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Summary Metrics -->
+        <section>
+            <h2>종합 지표 요약</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>지표</th>
+                            <th>값</th>
+                            <th>평가</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>총 광고 지출</td>
+                            <td><strong>$553.33</strong></td>
+                            <td>예산 내 운영</td>
+                        </tr>
+                        <tr>
+                            <td>총 전환 매출</td>
+                            <td><strong>$5,556.46</strong></td>
+                            <td>우수</td>
+                        </tr>
+                        <tr>
+                            <td>전체 ROAS</td>
+                            <td><strong>10.04</strong></td>
+                            <td>매우 우수 (목표: 3.0 이상)</td>
+                        </tr>
+                        <tr>
+                            <td>평균 CTR</td>
+                            <td><strong>5.54%</strong></td>
+                            <td>매우 우수 (업계 평균: 1-2%)</td>
+                        </tr>
+                        <tr>
+                            <td>평균 CPC</td>
+                            <td><strong>$0.17</strong></td>
+                            <td>효율적</td>
+                        </tr>
+                        <tr>
+                            <td>구매당 비용 (CPA)</td>
+                            <td><strong>$34.58</strong></td>
+                            <td>양호</td>
+                        </tr>
+                        <tr>
+                            <td>총 노출수</td>
+                            <td><strong>35,962</strong></td>
+                            <td>브랜드 인지도 확보</td>
+                        </tr>
+                        <tr>
+                            <td>총 클릭수</td>
+                            <td><strong>2,865</strong></td>
+                            <td>트래픽 확보 양호</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer>
+            <p><strong>광고 캠페인 성과 분석 보고서</strong></p>
+            <p>분석 기간: 2026-02-09 ~ 2026-02-19 | 생성일: 2026-02-19</p>
+            <p style="margin-top: 15px; font-size: 0.9em;">
+                본 보고서는 Meta 광고 플랫폼 데이터를 기반으로 자동 생성되었습니다.
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
